@@ -1,4 +1,5 @@
-const BOT_ADMIN_ID = '1314112694835482710';
+const DEFAULT_ADMIN_IDS = ['1314112694835482710'];
+const BOT_ADMIN_ID = DEFAULT_ADMIN_IDS[0];
 
 const JOBS = {
     'アルバイト': { salaryMin: 20, salaryMax: 40, cost: 0 },
@@ -9,14 +10,15 @@ const JOBS = {
 };
 
 const DEFAULT_MARKET = {
-    stocks: { TASLA: 100, GUGLE: 300, NUBIA: 150 },
-    crypto: { BTC: 5000, DOGE: 10, IKISUGI: 100 }
+    stocks: { TELSA: 100, GIGOLE: 300, MVIDIA: 150 },
+    crypto: { RMN: 5000, OPABI: 10, IKISUGI: 100 }
 };
 
 const SPLIT_THRESHOLD = 100000;
 const SPLIT_FACTOR = 10;
 
 module.exports = {
+    DEFAULT_ADMIN_IDS,
     BOT_ADMIN_ID,
     JOBS,
     DEFAULT_MARKET,

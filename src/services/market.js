@@ -5,6 +5,7 @@ const { announceSplit } = require('../utils/logger');
 async function checkAndExecuteSplits(client) {
     const data = getData();
     let modified = false;
+    const pendingAnnouncements = [];
 
     // 株式の分割
     for (const symbol in data.market.stocks) {
@@ -31,7 +32,7 @@ async function checkAndExecuteSplits(client) {
             }
 
             console.log(`【株式分割】${symbol} が ${splitsCount}回 分割されました。旧価格: ῑ${price} IP -> 新価格: ῑ${tempPrice} IP`);
-            await announceSplit(client, 'stock', symbol, totalFactor, price, tempPrice);
+            pendingAnnouncements.push({ type: 'stock', symbol, totalFactor, oldPrice: price, newPrice: tempPrice });
             modified = true;
         }
     }
@@ -61,13 +62,18 @@ async function checkAndExecuteSplits(client) {
             }
 
             console.log(`【仮想通貨分割】${symbol} が ${splitsCount}回 分割されました。旧価格: ῑ${price} IP -> 新価格: ῑ${tempPrice} IP`);
-            await announceSplit(client, 'crypto', symbol, totalFactor, price, tempPrice);
+            pendingAnnouncements.push({ type: 'crypto', symbol, totalFactor, oldPrice: price, newPrice: tempPrice });
             modified = true;
         }
     }
 
     if (modified) {
         saveData();
+    }
+
+    // データ保存完了後にアナウンスを非同期で送信
+    for (const item of pendingAnnouncements) {
+        await announceSplit(client, item.type, item.symbol, item.totalFactor, item.oldPrice, item.newPrice);
     }
 }
 

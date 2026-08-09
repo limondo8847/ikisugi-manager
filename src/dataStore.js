@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { DEFAULT_MARKET } = require('./constants');
+const { DEFAULT_MARKET, DEFAULT_ADMIN_IDS } = require('./constants');
 
 const DATA_FILE = path.join(__dirname, '../data.json');
 
@@ -12,7 +12,8 @@ let data = {
     jobs: {},
     assets: {},
     market: JSON.parse(JSON.stringify(DEFAULT_MARKET)),
-    governmentFunds: 100000
+    governmentFunds: 100000,
+    adminIds: [...DEFAULT_ADMIN_IDS]
 };
 
 function loadData() {
@@ -42,6 +43,9 @@ function loadData() {
         if (!data.jobs) data.jobs = {};
         if (!data.assets) data.assets = {};
         if (data.governmentFunds === undefined) data.governmentFunds = 100000;
+        if (!data.adminIds || !Array.isArray(data.adminIds) || data.adminIds.length === 0) {
+            data.adminIds = [...DEFAULT_ADMIN_IDS];
+        }
         if (!data.market) data.market = JSON.parse(JSON.stringify(DEFAULT_MARKET));
         if (!data.market.stocks) data.market.stocks = JSON.parse(JSON.stringify(DEFAULT_MARKET.stocks));
         if (!data.market.crypto) data.market.crypto = JSON.parse(JSON.stringify(DEFAULT_MARKET.crypto));
@@ -67,10 +71,16 @@ function saveData() {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
+function isAdmin(userId) {
+    if (!userId) return false;
+    return Array.isArray(data.adminIds) && data.adminIds.includes(userId);
+}
+
 loadData();
 
 module.exports = {
     getData: () => data,
     loadData,
-    saveData
+    saveData,
+    isAdmin
 };
