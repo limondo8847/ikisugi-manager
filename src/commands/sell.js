@@ -7,18 +7,11 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('sell')
         .setDescription('株式や仮想通貨を売却します')
+        // choices を廃止し、シンボルは動的にチェックする
         .addStringOption(option =>
             option.setName('symbol')
-                .setDescription('銘柄名')
-                .setRequired(true)
-                .addChoices(
-                    { name: 'TELSA (株)', value: 'TELSA' },
-                    { name: 'GIGOLE (株)', value: 'GIGOLE' },
-                    { name: 'MVIDIA (株)', value: 'MVIDIA' },
-                    { name: 'Ramune Coin (仮想通貨)', value: 'RMN' },
-                    { name: 'Opabium (仮想通貨)', value: 'OPABI' },
-                    { name: 'Ikisugi Coin (仮想通貨)', value: 'IKISUGI' }
-                ))
+                .setDescription('銘柄シンボルを入力してください（例: TELSA）')
+                .setRequired(true))
         .addStringOption(option =>
             option.setName('amount')
                 .setDescription('売却数量 (allで全額売却、または数値指定)')
@@ -28,7 +21,7 @@ module.exports = {
                 .setDescription('受取総額 (allで全額売却、または数値指定)')
                 .setRequired(false)),
     async execute(interaction, client) {
-        const symbol = interaction.options.getString('symbol');
+        const symbol = String(interaction.options.getString('symbol')).toUpperCase().trim();
         const amountOption = interaction.options.getString('amount');
         const totalIpOption = interaction.options.getString('total_ip');
         const userId = interaction.user.id;
@@ -44,16 +37,16 @@ module.exports = {
 
         const data = getData();
         let type = null;
-        if (data.market.stocks[symbol] !== undefined) {
+        if (data.market && data.market.stocks && data.market.stocks[symbol] !== undefined) {
             type = 'stock';
-        } else if (data.market.crypto[symbol] !== undefined) {
+        } else if (data.market && data.market.crypto && data.market.crypto[symbol] !== undefined) {
             type = 'crypto';
         }
 
         if (!type) {
             const errorEmbed = new EmbedBuilder()
                 .setTitle('エラー')
-                .setDescription('指定された銘柄が存在しません。')
+                .setDescription('指定された銘柄が存在しません。シンボルを確認してください。')
                 .setColor('Red')
                 .setTimestamp();
             return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
@@ -76,7 +69,7 @@ module.exports = {
         const marketGroup = type === 'stock' ? data.market.stocks : data.market.crypto;
         const currentPrice = marketGroup[symbol];
 
-        if (!currentPrice) {
+        if (currentPrice === undefined || currentPrice === null) {
             const errorEmbed = new EmbedBuilder()
                 .setTitle('エラー')
                 .setDescription('市場にこの銘柄の価格が存在しません。')
@@ -123,9 +116,10 @@ module.exports = {
         }
 
         if (amount < 0.000001) {
+            const minIp = Math.ceil(currentPrice * 0.000001);
             const errorEmbed = new EmbedBuilder()
                 .setTitle('エラー')
-                .setDescription(`指定された金額が少なすぎます。最小売却数量は **0.000001 単位** です。（現在のレートでは最低 **ῑ${Math.ceil(currentPrice * 0.000001)} IP** 必要です）`)
+                .setDescription(`指定された金額が少なすぎます。最小売却数量は **0.000001 単位** です。（現在のレートでは最低 **ῑ${minIp} IP** が必要です）`)
                 .setColor('Red')
                 .setTimestamp();
             return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
