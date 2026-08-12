@@ -4,16 +4,25 @@ const { getData } = require('../dataStore');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('portfolio')
-        .setDescription('自分の資産状況（所持金・保有株・保有仮想通貨）を確認します'),
+        .setDescription('資産状況（所持金・保有株・保有仮想通貨）を確認します')
+        .addUserOption(option =>
+            option.setName('user')
+                .setDescription('ポートフォリオを確認したいユーザー')
+                .setRequired(false)),
     async execute(interaction, client) {
-        const userId = interaction.user.id;
+        const targetUser = interaction.options.getUser('user') || interaction.user;
+        const userId = targetUser.id;
         const data = getData();
         const balance = data.balances[userId] || 0;
 
         const embed = new EmbedBuilder()
-            .setTitle(`${interaction.user.username} のポートフォリオ`)
+            .setTitle(`${targetUser.username} のポートフォリオ`)
             .setColor('DarkGreen')
             .setTimestamp();
+
+        if (targetUser.displayAvatarURL) {
+            embed.setThumbnail(targetUser.displayAvatarURL());
+        }
 
         let stockText = '';
         let stockValuation = 0;

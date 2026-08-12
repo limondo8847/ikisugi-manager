@@ -81,10 +81,10 @@ function startMarketInterval(client) {
     setInterval(async () => {
         const data = getData();
 
-        // 株の価格変動
+        // 株の価格変動 (-15% ~ +15%)
         for (const stock in data.market.stocks) {
             const currentPrice = data.market.stocks[stock];
-            const changePercent = (Math.random() * 35 - 15) / 100;
+            const changePercent = (Math.random() * 30 - 15) / 100;
             let newPrice = Math.round(currentPrice * (1 + changePercent));
             if (newPrice < 1) newPrice = 1;
             data.market.stocks[stock] = newPrice;
@@ -94,10 +94,10 @@ function startMarketInterval(client) {
             if (data.marketHistory.stocks[stock].length > 20) data.marketHistory.stocks[stock].shift();
         }
 
-        // 仮想通貨の価格変動
+        // 仮想通貨の価格変動 (-25% ~ +25%)
         for (const crypto in data.market.crypto) {
             const currentPrice = data.market.crypto[crypto];
-            const changePercent = (Math.random() * 45 - 20) / 100;
+            const changePercent = (Math.random() * 50 - 25) / 100;
             let newPrice = Math.round(currentPrice * (1 + changePercent));
             if (newPrice < 1) newPrice = 1;
             data.market.crypto[crypto] = newPrice;

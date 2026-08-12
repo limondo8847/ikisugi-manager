@@ -140,7 +140,10 @@ module.exports = {
             return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
         }
 
-        const totalEarn = Math.floor(currentPrice * amount);
+        const grossEarn = Math.floor(currentPrice * amount);
+        const tax = Math.floor(grossEarn * 0.05);
+        const netEarn = grossEarn - tax;
+
         userAssets[symbol] = Math.round((ownedAmount - amount) * 1000000) / 1000000;
 
         if (userAssets[symbol] <= 0) {
@@ -148,7 +151,10 @@ module.exports = {
         }
 
         if (!data.balances[userId]) data.balances[userId] = 0;
-        data.balances[userId] += totalEarn;
+        data.balances[userId] += netEarn;
+
+        if (data.governmentFunds === undefined) data.governmentFunds = 100000;
+        data.governmentFunds += tax;
 
         saveData();
         await updatePanel(client);
@@ -162,7 +168,9 @@ module.exports = {
             [
                 { name: '銘柄', value: symbol, inline: true },
                 { name: '数量', value: `${parseFloat(amount.toFixed(6))} 単位`, inline: true },
-                { name: '売却総額', value: `ῑ${totalEarn} IP`, inline: true },
+                { name: '売却総額', value: `ῑ${grossEarn} IP`, inline: true },
+                { name: '取引税 (5%)', value: `ῑ${tax} IP`, inline: true },
+                { name: '手取り受取額', value: `ῑ${netEarn} IP`, inline: true },
                 { name: '新残高', value: `ῑ${data.balances[userId]} IP`, inline: true }
             ]
         );
@@ -174,7 +182,9 @@ module.exports = {
             .addFields(
                 { name: '売却銘柄', value: `${symbol} (${type === 'stock' ? '株式' : '仮想通貨'})`, inline: true },
                 { name: '売却数量', value: `${parseFloat(amount.toFixed(6))} 単位`, inline: true },
-                { name: '売却総額', value: `ῑ${totalEarn} IP`, inline: true },
+                { name: '売却総額', value: `ῑ${grossEarn} IP`, inline: true },
+                { name: '取引税 (5%)', value: `ῑ${tax} IP`, inline: true },
+                { name: '受取額 (税引後)', value: `ῑ${netEarn} IP`, inline: true },
                 { name: '現在の残高', value: `ῑ${data.balances[userId]} IP`, inline: true }
             )
             .setTimestamp();
