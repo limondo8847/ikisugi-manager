@@ -7,13 +7,13 @@ const { sendActivityLog } = require('../utils/logger');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('work')
-        .setDescription('働いてIPを獲得します（1時間のクールダウンがあります）'),
+        .setDescription('働いてIPを獲得します（30分のクールダウンがあります）'),
     async execute(interaction, client) {
         const userId = interaction.user.id;
         const now = Date.now();
         const data = getData();
         const lastWorkTime = data.lastWork[userId] || 0;
-        const cooldown = 60 * 60 * 1000;
+        const cooldown = 30 * 60 * 1000;
 
         if (now - lastWorkTime < cooldown) {
             const timeLeft = cooldown - (now - lastWorkTime);
@@ -30,7 +30,9 @@ module.exports = {
         const job = data.jobs[userId] || 'アルバイト';
         const jobInfo = JOBS[job] || JOBS['アルバイト'];
 
-        const rawSalary = Math.floor(Math.random() * (jobInfo.salaryMax - jobInfo.salaryMin + 1)) + jobInfo.salaryMin;
+        const baseSalary = Math.floor(Math.random() * (jobInfo.salaryMax - jobInfo.salaryMin + 1)) + jobInfo.salaryMin;
+        const isBonus = Math.random() < 0.15;
+        const rawSalary = isBonus ? Math.floor(baseSalary * 1.5) : baseSalary;
         const tax = Math.floor(rawSalary * 0.1);
         const actualSalary = rawSalary - tax;
 
@@ -42,14 +44,18 @@ module.exports = {
         saveData();
         await updatePanel(client);
 
+        const logMsg = isBonus
+            ? `<@${userId}> が **${job}** として働き、**大成功ボーナス**を獲得！ῑ${rawSalary} IP（所得税10% ῑ${tax}控除、手取り ῑ${actualSalary} IP）を政府資金から獲得しました！`
+            : `<@${userId}> が **${job}** として働き、ῑ${rawSalary} IP（所得税10% ῑ${tax}控除、手取り ῑ${actualSalary} IP）を政府資金から獲得しました！`;
+
         await sendActivityLog(
             client,
             interaction,
             '労働ログ',
-            `<@${userId}> が **${job}** として働き、ῑ${rawSalary} IP（所得税10% ῑ${tax}控除、手取り ῑ${actualSalary} IP）を政府資金から獲得しました！`,
-            'Green',
+            logMsg,
+            isBonus ? 'Gold' : 'Green',
             [
-                { name: '総支給額', value: `ῑ${rawSalary} IP`, inline: true },
+                { name: '総支給額', value: `ῑ${rawSalary} IP${isBonus ? ' (ボーナス1.5倍)' : ''}`, inline: true },
                 { name: '所得税', value: `ῑ${tax} IP`, inline: true },
                 { name: '手取り額', value: `ῑ${actualSalary} IP`, inline: true },
                 { name: '新残高', value: `ῑ${data.balances[userId]} IP`, inline: true }
@@ -57,11 +63,15 @@ module.exports = {
         );
 
         const embed = new EmbedBuilder()
-            .setTitle('労働完了')
-            .setDescription(`**${job}** としての仕事を完了しました。給料は政府資金から支払われました。`)
-            .setColor('Green')
+            .setTitle(isBonus ? '★ 労働大成功！ (ボーナス支給)' : '労働完了')
+            .setDescription(
+                isBonus
+                    ? `**${job}** としての仕事で素晴らしい成果をあげました！(給料1.5倍ボーナス適用)`
+                    : `**${job}** としての仕事を完了しました。給料は政府資金から支払われました。`
+            )
+            .setColor(isBonus ? 'Gold' : 'Green')
             .addFields(
-                { name: '総支給給料', value: `ῑ${rawSalary} IP`, inline: true },
+                { name: '総支給給料', value: `ῑ${rawSalary} IP${isBonus ? ' (1.5倍)' : ''}`, inline: true },
                 { name: '所得税 (10%)', value: `ῑ${tax} IP`, inline: true },
                 { name: '手取り額', value: `ῑ${actualSalary} IP`, inline: true },
                 { name: '現在の残高', value: `ῑ${data.balances[userId]} IP`, inline: true }
