@@ -9,6 +9,7 @@ let data = {
     panels: {},
     logChannelId: null,
     lastWork: {},
+    lastInmuReward: {},
     jobs: {},
     assets: {},
     market: JSON.parse(JSON.stringify(DEFAULT_MARKET)),
@@ -18,11 +19,11 @@ let data = {
 
 function loadData() {
     if (fs.existsSync(DATA_FILE)) {
-        const raw = fs.readFileSync(DATA_FILE, 'utf8');
         try {
+            const raw = fs.readFileSync(DATA_FILE, 'utf8');
             data = JSON.parse(raw);
         } catch (e) {
-            console.error('データのパースに失敗しました。デフォルト値を使用します。', e);
+            console.error('データの読み込み・パースに失敗しました。デフォルト値を使用します。', e);
         }
 
         if (!data.balances) data.balances = {};
@@ -40,6 +41,7 @@ function loadData() {
 
         if (!data.logChannelId) data.logChannelId = null;
         if (!data.lastWork) data.lastWork = {};
+        if (!data.lastInmuReward) data.lastInmuReward = {};
         if (!data.jobs) data.jobs = {};
         if (!data.assets) data.assets = {};
         if (data.governmentFunds === undefined) data.governmentFunds = 100000;

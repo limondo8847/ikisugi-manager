@@ -1,12 +1,15 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const { commands, commandBuilders } = require('./src/commands');
 const { checkAndExecuteSplits, startMarketInterval } = require('./src/services/market');
+const { handleInmuMessage } = require('./src/services/inmu');
 require('dotenv').config();
 
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
     ]
 });
 
@@ -44,6 +47,14 @@ client.on('interactionCreate', async interaction => {
         } else {
             await interaction.reply(replyOptions);
         }
+    }
+});
+
+client.on('messageCreate', async message => {
+    try {
+        await handleInmuMessage(message, client);
+    } catch (error) {
+        console.error('メッセージ処理中にエラーが発生しました:', error);
     }
 });
 

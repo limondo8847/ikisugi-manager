@@ -33,14 +33,14 @@ module.exports = {
             const currentJob = data.jobs[userId] || 'アルバイト';
             const embed = new EmbedBuilder()
                 .setTitle('職業リスト & 転職案内')
-                .setDescription(`現在のあなたの職業: **${currentJob}**\n\n転職したい場合は \`/job change [職業名]\` を実行してください。`)
+                .setDescription(`現在のあなたの職業: **${currentJob}**\n語録発言時の獲得コインに職業ボーナス倍率が適用されます。\n\n転職したい場合は \`/job change [職業名]\` を実行してください。`)
                 .setColor('Blue')
                 .setTimestamp();
 
             for (const [name, info] of Object.entries(JOBS)) {
                 embed.addFields({
                     name: `${name} ${name === currentJob ? '(現在)' : ''}`,
-                    value: `給料: ῑ${info.salaryMin} 〜 ῑ${info.salaryMax} IP\n転職費用: ${info.cost === 0 ? '無料' : `ῑ${info.cost} IP`}`,
+                    value: `語録報酬: ῑ${info.salaryMin} 〜 ῑ${info.salaryMax} IP (ボーナス: ${info.multiplier}倍)\n転職費用: ${info.cost === 0 ? '無料' : `ῑ${info.cost} IP`}`,
                     inline: false
                 });
             }

@@ -85,7 +85,12 @@ function startMarketInterval(client) {
         for (const stock in data.market.stocks) {
             const currentPrice = data.market.stocks[stock];
             const changePercent = (Math.random() * 35 - 15) / 100;
-            let newPrice = Math.round(currentPrice * (1 + changePercent));
+            let delta = Math.round(currentPrice * changePercent);
+            // 低価格時の膠着防止（丸めて0になるのを防ぐ）
+            if (delta === 0) {
+                delta = Math.random() < 0.55 ? 1 : -1;
+            }
+            let newPrice = currentPrice + delta;
             if (newPrice < 1) newPrice = 1;
             data.market.stocks[stock] = newPrice;
 
@@ -94,11 +99,30 @@ function startMarketInterval(client) {
             if (data.marketHistory.stocks[stock].length > 20) data.marketHistory.stocks[stock].shift();
         }
 
-        // 仮想通貨の価格変動
+        // 仮想通貨の価格変動（ハイボラティリティ・膠着防止）
         for (const crypto in data.market.crypto) {
             const currentPrice = data.market.crypto[crypto];
-            const changePercent = (Math.random() * 45 - 20) / 100;
-            let newPrice = Math.round(currentPrice * (1 + changePercent));
+            let changePercent = (Math.random() * 45 - 20) / 100;
+
+            // 5%の確率で急騰イベント、3%の確率で急落イベント
+            const roll = Math.random();
+            if (roll < 0.05) {
+                changePercent = (Math.random() * 70 + 50) / 100; // +50% 〜 +120%
+            } else if (roll < 0.08) {
+                changePercent = -(Math.random() * 20 + 30) / 100; // -30% 〜 -50%
+            }
+
+            let delta = Math.round(currentPrice * changePercent);
+
+            // 低価格帯（10 IP以下）の場合は固定値（±1〜3）を加味して2 IP等の膠着を完全に防止
+            if (currentPrice <= 10) {
+                const step = Math.floor(Math.random() * 3) + 1;
+                delta = delta !== 0 ? delta : (Math.random() < 0.6 ? step : -step);
+            } else if (delta === 0) {
+                delta = Math.random() < 0.55 ? 1 : -1;
+            }
+
+            let newPrice = currentPrice + delta;
             if (newPrice < 1) newPrice = 1;
             data.market.crypto[crypto] = newPrice;
 
