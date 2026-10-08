@@ -135,7 +135,7 @@ function startMarketInterval(client) {
         console.log('【市場ニュース】価格が変動しました。', data.market);
 
         await checkAndExecuteSplits(client);
-    }, 5 * 60 * 1000);
+    }, 30 * 60 * 1000);
 }
 
 module.exports = {
